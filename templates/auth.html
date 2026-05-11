@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TaskFlow — {% if mode == 'login' %}Sign In{% else %}Create Account{% endif %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0a0f;
+      --surface: #13131c;
+      --border:  #1e1e2e;
+      --accent:  #7c6af7;
+      --accent2: #f76a8a;
+      --text:    #e8e8f0;
+      --muted:   #6b6b8a;
+      --success: #4ade80;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 600px 400px at 20% 30%, rgba(124,106,247,.15) 0%, transparent 60%),
+        radial-gradient(ellipse 500px 350px at 80% 70%, rgba(247,106,138,.10) 0%, transparent 60%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bgPulse {
+      from { opacity: .6; }
+      to   { opacity: 1; }
+    }
+
+    .grid-bg {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(124,106,247,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,106,247,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+
+    .card {
+      position: relative; z-index: 10;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 40px 80px rgba(0,0,0,.5), 0 0 0 1px rgba(124,106,247,.08);
+      animation: slideUp .5s cubic-bezier(.16,1,.3,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(30px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      letter-spacing: -1px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 16px var(--accent);
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 13px 16px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      transition: border-color .2s, box-shadow .2s;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,106,247,.15);
+    }
+    input::placeholder { color: var(--muted); }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: var(--accent);
+      color: #fff;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all .2s;
+      margin-top: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,.1), transparent);
+      transform: translateX(-100%);
+      transition: transform .4s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(124,106,247,.4); }
+    .btn:hover::after { transform: translateX(100%); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    .switch-link {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .switch-link a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .switch-link a:hover { text-decoration: underline; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    .alert.error   { background: rgba(247,106,138,.12); border: 1px solid rgba(247,106,138,.3); color: var(--accent2); }
+    .alert.success { background: rgba(74,222,128,.12);  border: 1px solid rgba(74,222,128,.3);  color: var(--success); }
+    .alert.show    { display: block; animation: fadeIn .3s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+  <div class="grid-bg"></div>
+  <div class="card">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      TaskFlow
+    </div>
+
+    {% if mode == 'login' %}
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to your workspace</p>
+    {% else %}
+    <h1>Create account</h1>
+    <p class="subtitle">Start managing your tasks today</p>
+    {% endif %}
+
+    <div class="alert error" id="alert"></div>
+
+    {% if mode == 'register' %}
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="yourname" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    {% else %}
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="yourname" autocomplete="username"/>
+    </div>
+    {% endif %}
+
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="{% if mode == 'login' %}current-password{% else %}new-password{% endif %}"/>
+    </div>
+
+    <button class="btn" id="submitBtn" onclick="handleSubmit()">
+      {% if mode == 'login' %}Sign In{% else %}Create Account{% endif %}
+    </button>
+
+    <div class="switch-link">
+      {% if mode == 'login' %}
+      Don't have an account? <a href="/register">Sign up</a>
+      {% else %}
+      Already have an account? <a href="/login">Sign in</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    const MODE = '{{ mode }}';
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') handleSubmit();
+    });
+
+    function showAlert(msg, type='error') {
+      const el = document.getElementById('alert');
+      el.textContent = msg;
+      el.className = `alert ${type} show`;
+    }
+
+    async function handleSubmit() {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.textContent = 'Please wait…';
+
+      const username  = document.getElementById('username').value.trim();
+      const password  = document.getElementById('password').value;
+      const email     = MODE === 'register' ? document.getElementById('email').value.trim() : null;
+
+      const url     = MODE === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const payload = MODE === 'login' ? { username, password } : { username, email, password };
+
+      try {
+        const res  = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          showAlert(data.error || 'Something went wrong');
+          btn.disabled = false;
+          btn.textContent = MODE === 'login' ? 'Sign In' : 'Create Account';
+          return;
+        }
+
+        showAlert('Success! Redirecting…', 'success');
+        setTimeout(() => window.location.href = '/dashboard', 800);
+      } catch {
+        showAlert('Network error. Please try again.');
+        btn.disabled = false;
+        btn.textContent = MODE === 'login' ? 'Sign In' : 'Create Account';
+      }
+    }
+  </script>
+</body>
+</html>
